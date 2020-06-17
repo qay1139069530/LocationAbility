@@ -1,5 +1,6 @@
 package com.qbase.locationability;
 
+import android.app.Notification;
 import android.content.Context;
 import android.text.TextUtils;
 import android.util.Log;
@@ -26,6 +27,7 @@ public class LocationHelper {
     private ILocationListener listener;
 
     private int indexCount = 1;
+    private boolean isStartLocation = false;
 
     private LocationHelper() {
     }
@@ -66,13 +68,35 @@ public class LocationHelper {
      * 启动定位
      */
     public void startLocation(Context context) {
+        if (isStartLocation) {
+            return;
+        }
+        isStartLocation = true;
         if (locationClient != null) {
             if (!locationClient.isStarted()) {
+                LogUtil.saveLog("---------- startLocation ----------");
                 locationClient.startLocation();
             }
+            isStartLocation = false;
         } else {
             initLocation(context);
         }
+    }
+
+    public void setBackGround(Context context, Notification notification) {
+        if (locationClient == null) {
+            locationClient = new AMapLocationClient(context.getApplicationContext());
+            if (locationOption == null) {
+                locationOption = getDefaultOption();
+            }
+        }
+        locationClient.enableBackgroundLocation(2001, notification);
+        //设置定位参数
+        locationClient.setLocationOption(locationOption);
+        // 设置定位监听
+        locationClient.setLocationListener(locationListener);
+        mAMapLocation = null;
+        onRefreshLocation(context);
     }
 
     /**
@@ -83,10 +107,14 @@ public class LocationHelper {
             locationClient.stopLocation();
         }
     }
-//
-//    public void setLocationListener(ILocationListener locationListener) {
-//        this.listener = locationListener;
-//    }
+
+    public boolean isStart() {
+        return locationClient != null && locationClient.isStarted();
+    }
+
+    public void setLocationListener(ILocationListener locationListener) {
+        this.listener = locationListener;
+    }
 
     /**
      * 默认的定位参数
@@ -154,18 +182,18 @@ public class LocationHelper {
         public void onLocationChanged(AMapLocation location) {
             if (null != location && location.getErrorCode() == 0) {
                 try {
-                    int locationType = location.getLocationType();
-                    String text = "定位成功 ： " +
-                            "  type : " + locationType +
-                            "  -- address : " + location.getAddress();
-                    Log.e("---------", text);
-                    LogUtil.saveLog(text);
+//                    int locationType = location.getLocationType();
+//                    String text = "定位成功 ： " +
+//                            "  type : " + locationType +
+//                            "  -- address : " + location.getAddress();
+//                    Log.e("---------", text);
+//                    LogUtil.saveLog(text);
 //                    if (gpsFirst) {
 //                        if (locationType == AMapLocation.LOCATION_TYPE_GPS) {
-//                    mAMapLocation = location;
-//                    if (listener != null) {
-//                        listener.onLocationSuccess(getLocationData());
-//                    }
+                    mAMapLocation = location;
+                    if (listener != null) {
+                        listener.onLocationSuccess(getLocationData());
+                    }
 //                            listener = null;
 //                            gpsFirst = false;
 //                            indexCount = 1;

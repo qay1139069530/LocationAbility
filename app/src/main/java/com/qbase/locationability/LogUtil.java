@@ -30,6 +30,7 @@ public class LogUtil {
                     return;
                 }
                 stream.write(strDate);
+                stream.write("\n");
                 stream.write("##");
                 stream.write("##");
                 stream.write(log);
